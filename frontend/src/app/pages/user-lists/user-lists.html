@@ -1,71 +1,77 @@
-<h1 class="text-indigo-600 text-3xl text-center p-6 font-extrabold tracking-wide">
-  USERS LOADED
-</h1>
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+/>
+
+<h1 class="text-indigo-600 text-3xl text-center p-6 font-extrabold tracking-wide">USERS LOADED</h1>
 
 <div class="p-6">
   <div
     class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 place-items-center"
   >
     @for (user of users(); track user._id) {
-    <div
-      class="group w-full max-w-xs h-[16rem] rounded-3xl bg-white border border-gray-200 p-6
-             shadow-[0_10px_30px_rgba(0,0,0,0.08)]
-             hover:shadow-[0_25px_60px_rgba(79,70,229,0.35)]
-             transition-all duration-500 ease-out
-             hover:-translate-y-2 flex flex-col justify-between"
-    >
-      
-      <div class="space-y-3 ">
-        
-        <h3 class="text-xl font-bold text-gray-800 tracking-wide">
-          {{ user.username }}
-        </h3>
+      <div
+        class="group w-full max-w-xs h-[16rem] rounded-3xl bg-white border border-gray-200 p-6 shadow-[0_10px_30px_rgba(0,0,0,0.08)] hover:shadow-[0_25px_60px_rgba(79,70,229,0.35)] transition-all duration-500 ease-out hover:-translate-y-2 flex flex-col justify-between"
+      >
+        <div class="space-y-3">
+          <h3 class="text-xl font-bold text-gray-800 tracking-wide flex items-center gap-2">
+            <span class="material-symbols-outlined text-indigo-500 text-lg">person</span>
+            {{ user.username }}
+          </h3>
 
-        <p class="text-sm text-gray-500 break-all">
-          {{ user.email }}
-        </p>
-      </div>
-
-      <!--  -->
-      <div class="space-y-2 ">
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-500 font-medium">Password</span>
-          <span class="font-semibold text-gray-800 whitespace-nowrap overflow-x-auto max-w-[6rem] ">
-            {{ user.password }}
-          </span>
+          <p class="text-sm text-gray-500 break-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-gray-400 text-base">email</span>
+            {{ user.email }}
+          </p>
         </div>
 
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-500 font-medium">Age</span>
-          <span class="font-bold text-indigo-600">
-            {{ user.age }}
-          </span>
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm items-center">
+            <span class="text-gray-500 font-medium flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">lock</span>
+              Password
+            </span>
+            <span
+              class="font-semibold text-gray-800 whitespace-nowrap overflow-x-auto max-w-[6rem]"
+            >
+              {{ user.password }}
+            </span>
+          </div>
+
+          <div class="flex justify-between text-sm items-center">
+            <span class="text-gray-500 font-medium flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">badge</span>
+              Age
+            </span>
+            <span class="font-bold text-indigo-600">
+              {{ user.age }}
+            </span>
+          </div>
+        </div>
+
+        <!-- crud buttons -->
+        <div class="flex gap-2 pt-5">
+          <!-- update -->
+          <button
+            [routerLink]="user._id"
+            class="flex-1 rounded-xl py-2 text-sm font-semibold text-white bg-indigo-500 hover:bg-indigo-600 transition flex items-center justify-center gap-1"
+            type="button"
+          >
+            <span class="material-symbols-outlined text-sm">edit</span>
+            Update
+          </button>
+
+          <!-- delete -->
+          <button
+            (click)="deleteUser(user._id)"
+            class="flex-1 rounded-xl py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition flex items-center justify-center gap-1"
+            type="button"
+          >
+            <span class="material-symbols-outlined text-sm">delete</span>
+            Delete
+          </button>
         </div>
       </div>
-
-      <!-- crud buttons -->
-      <div class="flex gap-2 pt-5">
-        <!-- update -->
-        <button
-          [routerLink]="user._id"
-          class="flex-1 rounded-xl py-2 text-sm font-semibold text-white
-                 bg-indigo-500 hover:bg-indigo-600 transition"
-          type="button"
-        >
-          Update
-        </button>
-
-        <!-- delete -->
-        <button
-          (click)="deleteUser(user._id)"
-          class="flex-1 rounded-xl py-2 text-sm font-semibold text-white
-                 bg-red-500 hover:bg-red-600 transition"
-          type="button"
-        >
-          Delete
-        </button>
-      </div>
-    </div>
     }
   </div>
 </div>
@@ -74,9 +80,9 @@
 <div class="p-6 flex justify-center">
   <button
     routerLink="add"
-    class="px-8 py-3 rounded-xl font-bold text-white
-           bg-green-500 hover:bg-green-600 transition"
+    class="px-8 py-3 rounded-xl font-bold text-white bg-green-500 hover:bg-green-600 transition flex items-center gap-2"
   >
+    <span class="material-symbols-outlined">person_add</span>
     Add User
   </button>
 </div>
