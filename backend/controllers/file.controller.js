@@ -81,3 +81,28 @@ exports.deleteFile = async (req, res) => {
   }
 };
 
+exports.listFiles = async (req, res) => {
+  try {
+    const bucketName = "my-files";
+    const files = [];
+
+    const stream = minioClient.listObjectsV2(bucketName, "", true);
+
+    stream.on("data", (obj) => {
+      files.push(obj.name);
+    });
+
+    stream.on("end", () => {
+      res.json(files);
+    });
+
+    stream.on("error", (err) => {
+      throw err;
+    });
+  } catch (error) {
+    console.error("LIST ERROR 👉", error);
+    res.status(500).json({ message: "List failed" });
+  }
+};
+
+

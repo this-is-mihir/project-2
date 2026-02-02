@@ -13,6 +13,9 @@ router.get("/", (req, res) => {
   res.send("file route working");
 });
 
+router.get("/list", fileController.listFiles);
+
+
 router.post(
   "/upload",
   upload.single("file"),

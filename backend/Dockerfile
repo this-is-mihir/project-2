@@ -17,4 +17,5 @@ COPY . .
 EXPOSE 4000
 
 # 7️⃣ Server start command
-CMD ["node", "server.js"]
+CMD ["npm", "run", "dev"]
+
