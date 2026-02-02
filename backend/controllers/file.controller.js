@@ -53,7 +53,7 @@ exports.downloadFile = async (req, res) => {
 
     stream.pipe(res);
   } catch (error) {
-    console.error("DOWNLOAD ERROR 👉", error);
+    console.error("DOWNLOAD ERRO", error);
     res.status(500).json({
       message: "Download failed",
       error: error.message,
@@ -73,7 +73,7 @@ exports.deleteFile = async (req, res) => {
       fileName,
     });
   } catch (error) {
-    console.error("DELETE ERROR 👉", error);
+    console.error("DELETE ERROR", error);
     res.status(500).json({
       message: "Delete failed",
       error: error.message,
@@ -100,7 +100,7 @@ exports.listFiles = async (req, res) => {
       throw err;
     });
   } catch (error) {
-    console.error("LIST ERROR 👉", error);
+    console.error("LIST ERROR ", error);
     res.status(500).json({ message: "List failed" });
   }
 };
