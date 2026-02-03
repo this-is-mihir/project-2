@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
 import { UserServices } from '../../user-services';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-user-card',
@@ -12,53 +13,85 @@ import { UserServices } from '../../user-services';
   styleUrl: './user-card.css',
 })
 export class UserCard {
-userService = inject(UserServices);
-fb = inject(FormBuilder);
 
-users: any[] = [];
-router = inject(Router);
-route = inject(ActivatedRoute);
+  userService = inject(UserServices);
+  http = inject(HttpClient);
+  fb = inject(FormBuilder);
 
-paramsMap = toSignal(this.route.paramMap);
-userId = computed(() => this.paramsMap()?.get('id'));
-isEditMode = computed(() => !!this.userId());
+  users: any[] = [];
+  router = inject(Router);
+  route = inject(ActivatedRoute);
 
-userForm = this.fb.group({
-  username: ['', Validators.required],
-  email: ['', [Validators.required, Validators.email]],
-  password: ['', Validators.required],
-  age: ['', Validators.required],
-});
+  paramsMap = toSignal(this.route.paramMap);
+  userId = computed(() => this.paramsMap()?.get('id'));
+  isEditMode = computed(() => !!this.userId());
 
-constructor() {
-  effect(async () => {
-    if (this.isEditMode() && this.userId()) {
-      const res = await firstValueFrom(
-        this.userService.getUserById(this.userId()!)
-      );
-      this.userForm.patchValue(res);
-    }
+  selectedFile!: File;
+
+  userForm = this.fb.group({
+    username: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', Validators.required],
+    age: ['', Validators.required],
+    profilePic: ['']   
   });
-}
 
-async saveUsers() {
-  if (this.userForm.invalid) {
-    alert('Fill all fields');
-    return;
+  constructor() {
+    effect(async () => {
+      if (this.isEditMode() && this.userId()) {
+        const res = await firstValueFrom(
+          this.userService.getUserById(this.userId()!)
+        );
+        this.userForm.patchValue(res);
+      }
+    });
   }
 
-  const data = this.userForm.value;
+  /* FILE SELECT → PRESIGN → PUT */
+  async onFileSelect(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-  const API = this.isEditMode()
-    ? this.userService.updateUser(this.userId()!, data)
-    : this.userService.addUser(data);
+    this.selectedFile = file;
 
-  const res = await firstValueFrom(API);
+    // 1️⃣ get presigned PUT url
+    const presignRes = await firstValueFrom(
+      this.userService.getPresignedUrl(file.name)
+    );
 
-  this.users.push(res);
-  this.userForm.reset();
+    // 2️⃣ upload to MinIO
+    await firstValueFrom(
+      this.http.put(presignRes.uploadUrl, file, {
+        headers: { 'Content-Type': file.type }
+      })
+    );
 
-  this.router.navigate(['/allusers']);
-}
+    // 3️⃣ SAVE ONLY fileName IN FORM
+    this.userForm.patchValue({
+      profilePic: presignRes.fileName
+    });
+  }
 
+  removeProfilePic() {
+    this.userForm.patchValue({ profilePic: '' });
+    this.selectedFile = undefined as any;
+  }
+
+  async saveUsers() {
+    if (this.userForm.invalid) {
+      alert('Fill all fields');
+      return;
+    }
+
+    const data = this.userForm.value;
+
+    const API = this.isEditMode()
+      ? this.userService.updateUser(this.userId()!, data)
+      : this.userService.addUser(data);
+
+    await firstValueFrom(API);
+
+    this.userForm.reset();
+    this.router.navigate(['/allusers']);
+  }
 }

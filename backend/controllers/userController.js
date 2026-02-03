@@ -3,11 +3,27 @@ const User = require("../model/user");
 // create user
 const createUser = async (req, res) => {
   try {
-    const user = new User(req.body);
+    const {
+      username,
+      email,
+      password,
+      age,
+      profilePic
+    } = req.body;
+
+    const user = new User({
+      username,
+      email,
+      password,
+      age,
+      profilePic // 🔥 THIS WAS MISSING
+    });
+
     await user.save();
-   return res.json(user);
+    return res.json(user);
+
   } catch (error) {
-   return res.json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -17,7 +33,7 @@ const getAllUsers = async (req, res) => {
     const users = await User.find();
     return res.json(users);
   } catch (error) {
-    return res.json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -27,19 +43,24 @@ const getSingleUser = async (req, res) => {
     const user = await User.findById(req.params.id);
     return res.json(user);
   } catch (error) {
-    return res.json({ message: "User not found" });
+    return res.status(404).json({ message: "User not found" });
   }
 };
 
 // update user
 const updateUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...req.body // profilePic yaha bhi aayega
+      },
+      { new: true }
+    );
+
     return res.json(user);
   } catch (error) {
-    return res.json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -49,9 +70,14 @@ const deleteUser = async (req, res) => {
     await User.findByIdAndDelete(req.params.id);
     return res.json({ message: "User deleted" });
   } catch (error) {
-    return res.json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// OLD STYLE EXPORT
-module.exports = {createUser,getAllUsers,getSingleUser,updateUser,deleteUser };
+module.exports = {
+  createUser,
+  getAllUsers,
+  getSingleUser,
+  updateUser,
+  deleteUser
+};

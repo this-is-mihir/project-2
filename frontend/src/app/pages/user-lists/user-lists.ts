@@ -11,25 +11,37 @@ import { RouterLink } from '@angular/router';
 })
 export class UserLists {
 
-userService = inject(UserServices);
+  userService = inject(UserServices);
 
-users = signal<any[]>([]);
-
+  users = signal<any[]>([]);
 
   constructor() {
-    effect (() =>{
+    effect(() => {
       this.getUser();
-    })
+    });
   }
 
-  async getUser() {
-    const res = await firstValueFrom(this.userService.getUsers());
-    console.log('api response', res);
-    this.users.set(res);
+ async getUser() {
+  const res = await firstValueFrom(this.userService.getUsers());
+
+  for (const user of res) {
+    if (user.profilePic && !user.profilePic.startsWith('http')) {
+      const imgRes = await firstValueFrom(
+        this.userService.getViewUrl(user.profilePic)
+      );
+      user.profilePicUrl = imgRes.viewUrl;
+
+
+    }
   }
+
+  this.users.set(res);
+}
+
 
   async deleteUser(id: string) {
     await firstValueFrom(this.userService.deleteUser(id));
     this.getUser();
   }
 }
+
