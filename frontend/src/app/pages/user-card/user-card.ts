@@ -72,10 +72,25 @@ export class UserCard {
     });
   }
 
-  removeProfilePic() {
-    this.userForm.patchValue({ profilePic: '' });
-    this.selectedFile = undefined as any;
+  async removeProfilePic() {
+  const oldFileName = this.userForm.value.profilePic;
+
+  if (!oldFileName) return;
+
+  try {
+    // 🔥 DELETE FROM MINIO FIRST
+    await firstValueFrom(
+      this.userService.deleteFile(oldFileName)
+    );
+  } catch (err) {
+    console.error("MinIO delete failed", err);
   }
+
+  // 🔥 THEN CLEAR FORM
+  this.userForm.patchValue({ profilePic: '' });
+  this.selectedFile = undefined as any;
+}
+
 
   async saveUsers() {
     if (this.userForm.invalid) {

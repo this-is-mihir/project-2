@@ -23,12 +23,12 @@ exports.uploadFile = async (req, res) => {
     const uploadUrl = await minioClient.presignedPutObject(
       BUCKET,
       objectName,
-      60 * 5 // 5 min
+      60 * 5
     );
 
     res.json({
       uploadUrl,
-      fileName: objectName, // return the objectName to store in DB
+      fileName: objectName,
     });
   } catch (error) {
     res.status(500).json({
@@ -48,7 +48,7 @@ exports.viewFile = async (req, res) => {
     const viewUrl = await minioClient.presignedGetObject(
       BUCKET,
       fileName,
-      60 * 5 // 5 min
+      60 * 5
     );
 
     res.json({ viewUrl });
@@ -61,7 +61,7 @@ exports.viewFile = async (req, res) => {
 };
 
 /* ======================
-   DOWNLOAD (OPTIONAL)
+   DOWNLOAD
    ====================== */
 exports.downloadFile = async (req, res) => {
   try {
@@ -84,15 +84,29 @@ exports.downloadFile = async (req, res) => {
 };
 
 /* ======================
-   DELETE FILE
+   DELETE FILE (FIXED)
    ====================== */
 exports.deleteFile = async (req, res) => {
+  console.log("DELETE FILE API HIT 👉", req.params.fileName);
+
   try {
-    const fileName = req.params.fileName;
+    let { fileName } = req.params;
+
+    if (!fileName) {
+      return res.status(400).json({ message: "fileName required" });
+    }
+
+    // 👉 if full URL comes, extract object name
+    if (fileName.startsWith("http")) {
+      fileName = fileName.split("/").pop();
+    }
 
     await minioClient.removeObject(BUCKET, fileName);
 
-    res.json({ message: "File deleted" });
+    res.json({
+      message: "File deleted successfully",
+      fileName,
+    });
   } catch (error) {
     res.status(500).json({
       message: "Delete failed",

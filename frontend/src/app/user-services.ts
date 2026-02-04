@@ -34,4 +34,14 @@ export class UserServices {
   getViewUrl(fileName: string) {
     return this.http.get<any>(`http://localhost:4000/files/view/${fileName}`);
   }
+
+  deleteFile(fileName: string) {
+    return this.http.delete(`http://localhost:4000/files/${fileName}`);
+  }
+
+  downloadFile(fileName: string) {
+    return this.http.get(`http://localhost:4000/files/download/${fileName}`, {
+      responseType: 'blob',
+    });
+  }
 }

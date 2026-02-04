@@ -1,33 +1,20 @@
 const User = require("../model/user");
+const minioClient = require("../config/minio");
 
-// create user
+const BUCKET = "my-files";
+
+/* ================= CREATE USER ================= */
 const createUser = async (req, res) => {
   try {
-    const {
-      username,
-      email,
-      password,
-      age,
-      profilePic
-    } = req.body;
-
-    const user = new User({
-      username,
-      email,
-      password,
-      age,
-      profilePic // 🔥 THIS WAS MISSING
-    });
-
+    const user = new User(req.body);
     await user.save();
     return res.json(user);
-
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
-// all users
+/* ================= GET ALL USERS ================= */
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
@@ -37,7 +24,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// single user
+/* ================= GET SINGLE USER ================= */
 const getSingleUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -47,30 +34,77 @@ const getSingleUser = async (req, res) => {
   }
 };
 
-// update user
+/* ================= UPDATE USER (🔥 IMPORTANT) ================= */
 const updateUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        ...req.body // profilePic yaha bhi aayega
-      },
+    const userId = req.params.id;
+    const incomingData = req.body;
+
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    /* ===== EXTRACT FILENAMES ===== */
+    const extractFileName = (value) => {
+      if (!value) return "";
+      return value.split("/").pop();
+    };
+
+    const oldPic = extractFileName(existingUser.profilePic);
+    const newPic = extractFileName(incomingData.profilePic);
+
+    /* ===== DELETE OLD IMAGE IF REPLACED ===== */
+    if (oldPic && newPic && oldPic !== newPic) {
+      try {
+        await minioClient.removeObject("my-files", oldPic);
+        console.log("OLD IMAGE DELETED 👉", oldPic);
+      } catch (err) {
+        console.log("MINIO DELETE FAILED 👉", err.message);
+      }
+    }
+
+    /* ===== SAVE ONLY FILENAME IN DB ===== */
+    incomingData.profilePic = newPic;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      incomingData,
       { new: true }
     );
 
-    return res.json(user);
+    return res.json(updatedUser);
+
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
-// delete user
+
+/* ================= DELETE USER ================= */
 const deleteUser = async (req, res) => {
   try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.json({ message: "User not found" });
+    }
+
+    // 🔥 DELETE IMAGE FROM MINIO FIRST
+    if (user.profilePic) {
+      try {
+        await minioClient.removeObject(BUCKET, user.profilePic);
+      } catch (err) {
+        console.log("MinIO delete failed:", err.message);
+      }
+    }
+
+    // 🔥 THEN DELETE USER
     await User.findByIdAndDelete(req.params.id);
+
     return res.json({ message: "User deleted" });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.json({ message: error.message });
   }
 };
 
